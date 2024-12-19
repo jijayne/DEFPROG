@@ -170,17 +170,19 @@
 #     root.mainloop()
 
 "REFACTORED CODE"
+
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog, filedialog
 import json
 import csv
 from datetime import datetime
+from collections import defaultdict
 
 class ExpenseTrackerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Expense Tracker & Budget Planner")
-        self.root.geometry("1100x500")
+        self.root.geometry("1200x600")
 
         self.expenses = []
         self.categories = ["Rent", "Food", "Entertainment", "Car", "Credit Cards"]
@@ -191,7 +193,11 @@ class ExpenseTrackerApp:
     def get_initial_budget(self):
         while True:
             try:
-                budget = simpledialog.askfloat("Monthly Budget", "Enter your monthly budget (positive number):", minvalue=0.01)
+                budget = simpledialog.askfloat(
+                    "Monthly Budget",
+                    "Enter your monthly budget (positive number):",
+                    minvalue=0.01
+                )
                 if budget is not None:
                     return budget
                 else:
@@ -221,18 +227,11 @@ class ExpenseTrackerApp:
         self.amount_entry.grid(row=2, column=1, padx=5)
 
         ttk.Button(input_frame, text="Add Expense", command=self.add_expense).grid(row=3, column=0, columnspan=2, pady=5)
-
-        # Category Management Frame
-        category_frame = ttk.LabelFrame(main_frame, text="Manage Categories", padding="10")
-        category_frame.grid(row=1, column=0, padx=5, pady=5, sticky=(tk.W, tk.E))
-
-        self.new_category_entry = ttk.Entry(category_frame)
-        self.new_category_entry.grid(row=0, column=0, padx=5)
-        ttk.Button(category_frame, text="Add Category", command=self.add_category).grid(row=0, column=1, padx=5)
+        ttk.Button(input_frame, text="Add Category", command=self.add_category).grid(row=4, column=0, columnspan=2, pady=5)
 
         # Display Frame
         display_frame = ttk.LabelFrame(main_frame, text="Expenses and Budget", padding="10")
-        display_frame.grid(row=0, column=1, rowspan=2, padx=5, pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
+        display_frame.grid(row=0, column=1, padx=5, pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
         self.expense_tree = ttk.Treeview(display_frame, columns=('Date', 'Category', 'Amount'), show='headings')
         self.expense_tree.heading('Date', text='Date')
@@ -244,8 +243,10 @@ class ExpenseTrackerApp:
         scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
         self.expense_tree.configure(yscrollcommand=scrollbar.set)
 
-        self.budget_label = ttk.Label(display_frame, text=f"Monthly Budget: ${self.monthly_budget:.2f}")
-        self.budget_label.grid(row=1, column=0, sticky=tk.W)
+        # Budget Information
+        ttk.Label(display_frame, text="Initial Budget:").grid(row=1, column=0, sticky=tk.W)
+        self.initial_budget_label = ttk.Label(display_frame, text=f"${self.monthly_budget:.2f}")
+        self.initial_budget_label.grid(row=1, column=1, sticky=tk.W)
 
         self.total_expenses_label = ttk.Label(display_frame, text="Total Expenses: $0.00")
         self.total_expenses_label.grid(row=2, column=0, sticky=tk.W)
@@ -253,8 +254,16 @@ class ExpenseTrackerApp:
         self.remaining_budget_label = ttk.Label(display_frame, text=f"Remaining Budget: ${self.monthly_budget:.2f}")
         self.remaining_budget_label.grid(row=3, column=0, sticky=tk.W)
 
-        ttk.Button(display_frame, text="Save Data", command=self.save_data).grid(row=4, column=0, pady=5)
-        ttk.Button(display_frame, text="Export to CSV", command=self.export_to_csv).grid(row=5, column=0, pady=5)
+        ttk.Button(display_frame, text="Search by Category", command=self.search_by_category).grid(row=4, column=0, pady=5)
+        ttk.Button(display_frame, text="Save Data", command=self.save_data).grid(row=5, column=0, pady=5)
+        ttk.Button(display_frame, text="Export to CSV", command=self.export_to_csv).grid(row=6, column=0, pady=5)
+
+        # Summary Frame
+        summary_frame = ttk.LabelFrame(main_frame, text="Expense Summary by Category", padding="10")
+        summary_frame.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+        self.summary_text = tk.Text(summary_frame, height=10, wrap="word")
+        self.summary_text.grid(row=0, column=0, sticky=(tk.W, tk.E))
 
     def add_expense(self):
         try:
@@ -262,7 +271,6 @@ class ExpenseTrackerApp:
             category = self.category_combobox.get().strip()
             amount = float(self.amount_entry.get().strip())
 
-            # Validate inputs
             datetime.strptime(date, "%Y-%m-%d")  # Date validation
             if category not in self.categories:
                 raise ValueError("Invalid category. Please select a valid category.")
@@ -277,14 +285,27 @@ class ExpenseTrackerApp:
             messagebox.showerror("Error", str(e))
 
     def add_category(self):
-        new_category = self.new_category_entry.get().strip()
+        new_category = simpledialog.askstring("Add Category", "Enter the new category:")
         if new_category and new_category not in self.categories:
             self.categories.append(new_category)
             self.category_combobox['values'] = self.categories
-            self.new_category_entry.delete(0, tk.END)
-            messagebox.showinfo("Category Added", f"'{new_category}' has been added.")
+            messagebox.showinfo("Success", f"Category '{new_category}' added!")
+        elif new_category:
+            messagebox.showerror("Error", "Category already exists!")
+
+    def search_by_category(self):
+        selected_category = simpledialog.askstring("Search", "Enter category to search:")
+        if not selected_category:
+            return
+
+        filtered_expenses = [expense for expense in self.expenses if expense['category'] == selected_category]
+        if filtered_expenses:
+            for item in self.expense_tree.get_children():
+                self.expense_tree.delete(item)
+            for expense in filtered_expenses:
+                self.expense_tree.insert('', 'end', values=(expense['date'], expense['category'], f"${expense['amount']:.2f}"))
         else:
-            messagebox.showerror("Error", "Invalid or duplicate category name.")
+            messagebox.showinfo("No Results", f"No expenses found for category '{selected_category}'.")
 
     def update_expense_list(self):
         for item in self.expense_tree.get_children():
@@ -302,6 +323,17 @@ class ExpenseTrackerApp:
         if total_expenses > 0.8 * self.monthly_budget:
             messagebox.showwarning("Budget Alert", "Warning: You have exceeded 80% of your budget!")
 
+        self.update_summary()
+
+    def update_summary(self):
+        category_totals = defaultdict(float)
+        for expense in self.expenses:
+            category_totals[expense['category']] += expense['amount']
+
+        self.summary_text.delete(1.0, tk.END)
+        for category, total in category_totals.items():
+            self.summary_text.insert(tk.END, f"{category}: ${total:.2f}\n")
+
     def clear_input_fields(self):
         self.date_entry.delete(0, tk.END)
         self.category_combobox.set('')
@@ -310,7 +342,6 @@ class ExpenseTrackerApp:
     def save_data(self):
         try:
             data = {'budget': self.monthly_budget, 'categories': self.categories, 'expenses': self.expenses}
-            current_date = datetime.now().strftime("%Y-%m")
             file_path = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
             if file_path:
                 with open(file_path, 'w') as f:
