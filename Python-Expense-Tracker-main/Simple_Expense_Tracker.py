@@ -72,13 +72,13 @@
 #         scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
 #         self.expense_tree.configure(yscrollcommand=scrollbar.set)
 
-#         self.budget_label = ttk.Label(display_frame, text=f"Monthly Budget: ${self.monthly_budget:.2f}")
+#         self.budget_label = ttk.Label(display_frame, text=f"Monthly Budget: ₱{self.monthly_budget:.2f}")
 #         self.budget_label.grid(row=1, column=0, sticky=tk.W, pady=2)
 
-#         self.total_expenses_label = ttk.Label(display_frame, text="Total Expenses: $0.00")
+#         self.total_expenses_label = ttk.Label(display_frame, text="Total Expenses: ₱0.00")
 #         self.total_expenses_label.grid(row=2, column=0, sticky=tk.W, pady=2)
 
-#         self.remaining_budget_label = ttk.Label(display_frame, text=f"Remaining Budget: ${self.monthly_budget:.2f}")
+#         self.remaining_budget_label = ttk.Label(display_frame, text=f"Remaining Budget: ₱{self.monthly_budget:.2f}")
 #         self.remaining_budget_label.grid(row=3, column=0, sticky=tk.W, pady=2)
 
 #         # Save Button
@@ -127,15 +127,15 @@
 #             self.expense_tree.insert('', 'end', values=(
 #                 expense['date'],
 #                 expense['category'],
-#                 f"${expense['amount']:.2f}"
+#                 f"₱{expense['amount']:.2f}"
 #             ))
 
 #     def update_budget_info(self):
 #         total_expenses = sum(expense['amount'] for expense in self.expenses)
 #         remaining_budget = self.monthly_budget - total_expenses
 
-#         self.total_expenses_label.config(text=f"Total Expenses: ${total_expenses:.2f}")
-#         self.remaining_budget_label.config(text=f"Remaining Budget: ${remaining_budget:.2f}")
+#         self.total_expenses_label.config(text=f"Total Expenses: ₱{total_expenses:.2f}")
+#         self.remaining_budget_label.config(text=f"Remaining Budget: {remaining_budget:.2f}")
 
 #     def clear_input_fields(self):
 #         self.date_entry.delete(0, tk.END)
@@ -245,13 +245,13 @@ class ExpenseTrackerApp:
 
         # Budget Information
         ttk.Label(display_frame, text="Initial Budget:").grid(row=1, column=0, sticky=tk.W)
-        self.initial_budget_label = ttk.Label(display_frame, text=f"${self.monthly_budget:.2f}")
+        self.initial_budget_label = ttk.Label(display_frame, text=f"{self.monthly_budget:.2f}")
         self.initial_budget_label.grid(row=1, column=1, sticky=tk.W)
 
-        self.total_expenses_label = ttk.Label(display_frame, text="Total Expenses: $0.00")
+        self.total_expenses_label = ttk.Label(display_frame, text="Total Expenses: ₱0.00")
         self.total_expenses_label.grid(row=2, column=0, sticky=tk.W)
 
-        self.remaining_budget_label = ttk.Label(display_frame, text=f"Remaining Budget: ${self.monthly_budget:.2f}")
+        self.remaining_budget_label = ttk.Label(display_frame, text=f"Remaining Budget: ₱{self.monthly_budget:.2f}")
         self.remaining_budget_label.grid(row=3, column=0, sticky=tk.W)
 
         ttk.Button(display_frame, text="Search by Category", command=self.search_by_category).grid(row=4, column=0, pady=5)
@@ -306,7 +306,7 @@ class ExpenseTrackerApp:
             for item in self.expense_tree.get_children():
                 self.expense_tree.delete(item)
             for expense in filtered_expenses:
-                self.expense_tree.insert('', 'end', values=(expense['date'], expense['category'], f"${expense['amount']:.2f}"))
+                self.expense_tree.insert('', 'end', values=(expense['date'], expense['category'], f"₱{expense['amount']:.2f}"))
         else:
             messagebox.showinfo("No Results", f"No expenses found for category '{selected_category}'.")
 
@@ -314,14 +314,14 @@ class ExpenseTrackerApp:
         for item in self.expense_tree.get_children():
             self.expense_tree.delete(item)
         for expense in self.expenses:
-            self.expense_tree.insert('', 'end', values=(expense['date'], expense['category'], f"${expense['amount']:.2f}"))
+            self.expense_tree.insert('', 'end', values=(expense['date'], expense['category'], f"₱{expense['amount']:.2f}"))
 
     def update_budget_info(self):
         total_expenses = sum(expense['amount'] for expense in self.expenses)
         remaining_budget = self.monthly_budget - total_expenses
 
-        self.total_expenses_label.config(text=f"Total Expenses: ${total_expenses:.2f}")
-        self.remaining_budget_label.config(text=f"Remaining Budget: ${remaining_budget:.2f}")
+        self.total_expenses_label.config(text=f"Total Expenses: ₱{total_expenses:.2f}")
+        self.remaining_budget_label.config(text=f"Remaining Budget: ₱{remaining_budget:.2f}")
 
         if total_expenses > 0.8 * self.monthly_budget:
             messagebox.showwarning("Budget Alert", "Warning: You have exceeded 80% of your budget!")
@@ -335,7 +335,7 @@ class ExpenseTrackerApp:
 
         self.summary_text.delete(1.0, tk.END)
         for category, total in category_totals.items():
-            self.summary_text.insert(tk.END, f"{category}: ${total:.2f}\n")
+            self.summary_text.insert(tk.END, f"{category}: ₱{total:.2f}\n")
 
     def clear_input_fields(self):
         self.date_entry.delete(0, tk.END)
@@ -372,7 +372,7 @@ class ExpenseTrackerApp:
             item_data = self.expense_tree.item(selected_item, 'values')
             self.expenses = [
                 expense for expense in self.expenses
-                if not (expense['date'] == item_data[0] and expense['category'] == item_data[1] and f"${expense['amount']:.2f}" == item_data[2])
+                if not (expense['date'] == item_data[0] and expense['category'] == item_data[1] and f"₱{expense['amount']:.2f}" == item_data[2])
             ]
             self.expense_tree.delete(selected_item)
             self.update_budget_info()
